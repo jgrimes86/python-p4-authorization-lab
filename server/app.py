@@ -30,7 +30,7 @@ class ClearSession(Resource):
 class IndexArticle(Resource):
     
     def get(self):
-        articles = [article.to_dict() for article in Article.query.all()]
+        articles = [article.to_dict() for article in Article.query.all() if article.is_member_only == 0]
         return make_response(jsonify(articles), 200)
 
 class ShowArticle(Resource):
@@ -87,12 +87,22 @@ class CheckSession(Resource):
 class MemberOnlyIndex(Resource):
     
     def get(self):
-        pass
+        if session['user_id']:
+            articles = [article.to_dict() for article in Article.query.all() if article.is_member_only == 1]
+            return make_response(jsonify(articles), 200)
+        else:
+            return make_response({"error": "Unauthorized"}, 401)
 
 class MemberOnlyArticle(Resource):
     
     def get(self, id):
-        pass
+        if session['user_id']:
+            article = Article.query.filter(Article.id == id).first()
+            article_json = article.to_dict()
+        else:
+            return make_response({"error": "Unauthorized"}, 401)
+
+
 
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
